@@ -1,0 +1,112 @@
+C51 COMPILER V9.00   MAIN                                                                  05/03/2018 18:37:49 PAGE 1   
+
+
+C51 COMPILER V9.00, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN main.OBJ
+COMPILER INVOKED BY: D:\program files\C51\BIN\C51.EXE main.c BROWSE DEBUG OBJECTEXTEND
+
+line level    source
+
+   1          #include <REGX51.H>
+   2          #define uchar unsigned char
+   3          #define uint unsigned int
+   4          uint cp1,cp2,cp3,cp4,cp5,sec=0,hour=0,min=0,a,b=16,pwm,sec1=0;
+   5          uint  intensity,infrard,AD1,AD2;
+   6          #include <AD.c>
+   7          #include <1602.c>
+   8          #include <key.c>  
+   9          sbit LED=P2^1;
+  10          #include <display.c> 
+  11          void timer_isr()interrupt 1
+  12          {
+  13   1              TL0 = (65535-1000)%256;                     
+  14   1          TH0 = (65535-1000)/256;
+  15   1              cp1++; 
+  16   1              cp3++;
+  17   1          if(cp3 > AD2)  pwm =1;
+  18   1              if(cp3 <= AD2)  pwm =0;
+  19   1              if(cp3 >= 25) cp3=0;
+  20   1                       
+  21   1              if(cp1>=200)
+  22   1              {
+  23   2                      cp1=0;
+  24   2                      cp2++;
+  25   2                      if(cp2 == 1)
+  26   2                      {
+  27   3                              infrard =  read_pcf8591(0x40);
+  28   3                      } 
+  29   2                      if(cp2 == 4)
+  30   2                      {
+  31   3                              cp2=0;
+  32   3                              sec++;
+  33   3                              intensity = read_pcf8591(0x42);//¹âÇ¿
+  34   3                              AD1= intensity*0.39;   
+  35   3                      AD2= intensity/10;
+  36   3      
+  37   3                      }
+  38   2              }         
+  39   1              if(sec>=60)
+  40   1              {
+  41   2                      min++;
+  42   2                      sec=0;
+  43   2              }
+  44   1              if(min>=60)
+  45   1              {
+  46   2                      min=0;
+  47   2                      hour++;
+  48   2              }
+  49   1              if(hour>=24) hour=0; 
+  50   1               if(mode == 0)
+  51   1              {                               
+  52   2              if(infrard  >= 150)LED = pwm;   
+  53   2              else LED = 1;
+  54   2              }
+  55   1              if(mode == 1)
+C51 COMPILER V9.00   MAIN                                                                  05/03/2018 18:37:49 PAGE 2   
+
+  56   1              {
+  57   2                      LED = 1;        
+  58   2              }
+  59   1      }
+  60          
+  61          
+  62          void timer_init()
+  63          {
+  64   1          TMOD |= 0x01;                  
+  65   1              TL0 = (65535-1000)%256;                     
+  66   1          TH0 = (65535-1000)/256;
+  67   1          TR0 = 1;                        
+  68   1          ET0 = 1;                      
+  69   1          EA = 1; 
+  70   1      }
+  71          void main()
+  72          {
+  73   1      
+  74   1      //    uchar i;
+  75   1          timer_init();
+  76   1          init_24c04();
+  77   1              init_1602();
+  78   1              sec=0;
+  79   1              hour=0;                 
+  80   1              min=0;
+  81   1      
+  82   1              while(1)
+  83   1              {
+  84   2                       key();
+  85   2                      display();
+  86   2              }
+  87   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    842    ----
+   CONSTANT SIZE    =     24    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     44    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
